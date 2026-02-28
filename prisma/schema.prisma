@@ -1,0 +1,181 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ==================== MOSQUE (Tenant) ====================
+model Mosque {
+  id            String   @id @default(cuid())
+  slug          String   @unique
+  name          String
+  clerkOrgId    String?  @unique
+  city          String
+  country       String
+  latitude      Float
+  longitude     Float
+  timezone      String   @default("UTC")
+  calculationMethod Int  @default(2)
+  asrMethod     Int      @default(0) // 0=Shafi, 1=Hanafi
+  iqamahOffsets  Json?   // { fajr: 15, dhuhr: 10, asr: 10, maghrib: 5, isha: 15 }
+  logoUrl       String?
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  announcements       Announcement[]
+  prayerTimeOverrides PrayerTimeOverride[]
+  displaySettings     DisplaySettings?
+  weatherSettings     WeatherSettings?
+  quranHadith         QuranHadith[]
+  donations           Donation[]
+  media               Media[]
+
+  @@index([clerkOrgId])
+}
+
+// ==================== DISPLAY SETTINGS ====================
+model DisplaySettings {
+  id                   String   @id @default(cuid())
+  mosqueId             String   @unique
+  theme                String   @default("dark")
+  primaryColor         String   @default("#10b981")
+  secondaryColor       String   @default("#3b82f6")
+  showHijriDate        Boolean  @default(true)
+  showGregorianDate    Boolean  @default(true)
+  clockFormat          String   @default("12h") // "12h" or "24h"
+  announcementDuration Int      @default(10)
+  transitionEffect     String   @default("fade")
+  mediaInterval        Int      @default(10)
+  infoDuration         Int      @default(30)
+  showPrayerTimes      Boolean  @default(true)
+  showAnnouncements    Boolean  @default(true)
+  showWeather          Boolean  @default(true)
+  showDonations        Boolean  @default(true)
+  showQuranHadith      Boolean  @default(true)
+  showClock            Boolean  @default(true)
+  showCountdown        Boolean  @default(true)
+  showLocation         Boolean  @default(true)
+  showLogo             Boolean  @default(true)
+  marqueeSpeed         Int      @default(25)
+  updatedAt            DateTime @updatedAt
+
+  mosque Mosque @relation(fields: [mosqueId], references: [id], onDelete: Cascade)
+}
+
+// ==================== PRAYER TIME OVERRIDE ====================
+model PrayerTimeOverride {
+  id       String   @id @default(cuid())
+  mosqueId String
+  date     DateTime @db.Date
+  fajr     String?
+  dhuhr    String?
+  asr      String?
+  maghrib  String?
+  isha     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  mosque Mosque @relation(fields: [mosqueId], references: [id], onDelete: Cascade)
+
+  @@unique([mosqueId, date])
+}
+
+// ==================== WEATHER SETTINGS ====================
+model WeatherSettings {
+  id        String   @id @default(cuid())
+  mosqueId  String   @unique
+  location  String
+  unit      String   @default("metric")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  mosque Mosque @relation(fields: [mosqueId], references: [id], onDelete: Cascade)
+}
+
+// ==================== QURAN & HADITH ====================
+model QuranHadith {
+  id              String      @id @default(cuid())
+  mosqueId        String
+  type            ContentType
+  textArabic      String      @db.Text
+  textTranslation String      @db.Text
+  reference       String
+  isActive        Boolean     @default(true)
+  sortOrder       Int         @default(0)
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  mosque Mosque @relation(fields: [mosqueId], references: [id], onDelete: Cascade)
+
+  @@index([mosqueId, isActive])
+}
+
+enum ContentType {
+  QURAN
+  HADITH
+}
+
+// ==================== DONATIONS ====================
+model Donation {
+  id            String   @id @default(cuid())
+  mosqueId      String
+  title         String
+  description   String?  @db.Text
+  qrCodeUrl     String?
+  targetAmount  Float?
+  currentAmount Float    @default(0)
+  currency      String   @default("USD")
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  mosque Mosque @relation(fields: [mosqueId], references: [id], onDelete: Cascade)
+
+  @@index([mosqueId, isActive])
+}
+
+// ==================== MEDIA ====================
+model Media {
+  id       String    @id @default(cuid())
+  mosqueId String
+  type     MediaType
+  url      String
+  title    String?
+  duration Int       @default(10)
+  sortOrder Int      @default(0)
+  isActive Boolean   @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  mosque Mosque @relation(fields: [mosqueId], references: [id], onDelete: Cascade)
+
+  @@index([mosqueId, isActive, sortOrder])
+}
+
+enum MediaType {
+  IMAGE
+  VIDEO
+}
+
+// ==================== ANNOUNCEMENTS ====================
+model Announcement {
+  id        String    @id @default(cuid())
+  mosqueId  String
+  title     String
+  content   String
+  priority  String    @default("medium")
+  startDate DateTime  @default(now())
+  endDate   DateTime?
+  isActive  Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  mosque Mosque @relation(fields: [mosqueId], references: [id], onDelete: Cascade)
+
+  @@index([mosqueId])
+  @@index([isActive, startDate, endDate])
+}
