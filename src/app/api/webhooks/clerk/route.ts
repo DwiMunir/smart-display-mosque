@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createMosqueWithDefaults } from "@/lib/api/mosque-setup";
 import { prisma } from "@/lib/db";
 
 export async function POST(req: NextRequest) {
@@ -7,17 +8,17 @@ export async function POST(req: NextRequest) {
 
   if (eventType === "organization.created") {
     const { id, name, slug } = payload.data;
-    await prisma.mosque.create({
-      data: {
-        name,
-        slug: slug || name.toLowerCase().replace(/\s+/g, "-"),
-        clerkOrgId: id,
-        city: "",
-        country: "",
-        latitude: 0,
-        longitude: 0,
-        displaySettings: { create: {} },
-      },
+
+    // Create mosque with all default settings and Quran/Hadith content
+    await createMosqueWithDefaults({
+      name,
+      slug: slug || name.toLowerCase().replace(/\s+/g, "-"),
+      clerkOrgId: id,
+      city: "",
+      country: "",
+      latitude: 0,
+      longitude: 0,
+      timezone: "UTC",
     });
   }
 

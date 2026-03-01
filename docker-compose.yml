@@ -11,7 +11,11 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-mosque} -d ${POSTGRES_DB:-mosque_display}"]
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-mosque} -d ${POSTGRES_DB:-mosque_display}",
+        ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -30,6 +34,7 @@ services:
         - NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL=${NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL:-/dashboard}
         - NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL=${NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL:-/select-organization}
         - NEXT_PUBLIC_ALADHAN_API=${NEXT_PUBLIC_ALADHAN_API:-https://api.aladhan.com/v1}
+        - DATABASE_URL=postgresql://${POSTGRES_USER:-mosque}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-mosque_display}
     container_name: mosque-app
     restart: unless-stopped
     depends_on:

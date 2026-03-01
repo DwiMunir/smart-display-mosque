@@ -42,9 +42,7 @@ ENV NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL=$NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL
 ENV NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL=$NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL
 ENV NEXT_PUBLIC_ALADHAN_API=$NEXT_PUBLIC_ALADHAN_API
 
-# Generate Prisma client
 RUN npx prisma generate
-
 # Build Next.js app
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
@@ -78,10 +76,11 @@ COPY --from=builder /app/package.json ./package.json
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-# Copy Prisma client and node_modules needed for migrations
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
-COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
+# Copy Prisma schema + config + install CLI for migrations
+COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
+COPY --from=builder /app/src/generated ./src/generated
+RUN npm install prisma @prisma/adapter-pg @prisma/dev --no-save
 
 # Copy entrypoint script
 COPY --chmod=755 docker-entrypoint.sh /app/docker-entrypoint.sh
