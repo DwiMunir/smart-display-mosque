@@ -82,8 +82,8 @@ COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
 COPY --from=builder /app/src/generated ./src/generated
 RUN npm install prisma @prisma/adapter-pg @prisma/dev dotenv --no-save
 
-RUN npm run db:generate
-RUN npm run db:migrate
+RUN npx prisma generate
+RUN npx prisma migrate deploy
 
 # Copy entrypoint script
 COPY --chmod=755 docker-entrypoint.sh /app/docker-entrypoint.sh
