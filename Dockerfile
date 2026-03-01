@@ -80,10 +80,10 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
 COPY --from=builder /app/src/generated ./src/generated
-# RUN npm install prisma @prisma/adapter-pg @prisma/dev dotenv --no-save
+RUN npm install prisma @prisma/adapter-pg @prisma/dev dotenv --no-save
 
 RUN npx prisma generate
-RUN npx prisma migrate dev
+RUN npx prisma migrate deploy --schema=./prisma/schema.prisma
 
 # Copy entrypoint script
 COPY --chmod=755 docker-entrypoint.sh /app/docker-entrypoint.sh
