@@ -80,7 +80,7 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
 COPY --from=builder /app/src/generated ./src/generated
-RUN npm install prisma @prisma/adapter-pg @prisma/dev --no-save
+RUN npm install prisma @prisma/adapter-pg @prisma/dev dotenv --no-save
 
 RUN npm run db:generate
 RUN npm run db:migrate
